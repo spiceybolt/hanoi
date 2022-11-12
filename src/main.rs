@@ -1,18 +1,21 @@
 use graphics::Context;
 use opengl_graphics::{OpenGL, GlGraphics};
-use piston::{WindowSettings, EventLoop, RenderEvent};
+use piston::{WindowSettings, EventLoop, RenderEvent, input::{Button,Key}, PressEvent};
 use glutin_window::GlutinWindow;
 use piston::event_loop::{EventSettings,Events};
 
-mod game_screen;
-pub use game_screen::GameScreen;
+mod column;
 
-pub const BLOCKS: i32 = 5;
+use column::{Plank, GameState, Selection};
+pub const PLANK_NUMBER: f64 = 5.0;
+pub const PLANK_WIDTH: f64 = 50.0;
+pub const PLANK_LENGTH: f64 = 50.0;
+pub const COLUMN_LENGTH: f64 = PLANK_LENGTH*(PLANK_NUMBER+1.0);
+pub const COLUMN_WIDTH: f64 = PLANK_WIDTH*(PLANK_NUMBER+2.0);
 fn main() {
-    println!("Hello, world!");
 
     let opengl = OpenGL::V3_2;
-    let window_settings = WindowSettings::new("hanoi", (500,500))
+    let window_settings = WindowSettings::new("hanoi", (1000.0,1000.0))
         .exit_on_esc(true)
         .graphics_api(opengl);
 
@@ -22,16 +25,132 @@ fn main() {
     let mut events = Events::new(EventSettings::new().lazy(true));
     let mut gl = GlGraphics::new(opengl);
 
-    let Game = GameScreen::new(BLOCKS);
-    Game.read();
+
+    let pos = [10.0,10.0];
+
+    
+    let mut moving_plank: Option<Plank> = None;
+
+    let mut game_state = GameState::new(pos);
+
+
     while let Some(event) = events.next(&mut window){
-        //pass events into  controllers here
+        if let Some(Button::Keyboard(key)) = event.press_args() {
+            match key {
+                Key::A => {
+                    
+                        game_state.sel_c = Selection::Left;
+                    
+                    match moving_plank.as_mut() {
+                        Some(plk) => plk.rect[0] = pos[0] +  (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0,
+                        None => (),
+                    }
+                },
+                Key::S => {
+                    
+                    game_state.sel_c = Selection::Centre;
+                    
+                    match moving_plank.as_mut() {
+                        Some(plk) => plk.rect[0] = pos[0] + COLUMN_LENGTH + (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0,
+                        None => (),
+                    }
+                
+                },
+                Key::D => {
+                    
+                    game_state.sel_c = Selection::Right;
+                    
+                    match moving_plank.as_mut() {
+                        Some(plk) => plk.rect[0] = pos[0] + 2.0*COLUMN_LENGTH + (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0,
+                        None => (),
+                    }
+                },
+                Key::W => {
+                    moving_plank = match moving_plank {
+                        //a plank is already up
+                        Some(plk) => {
+                            match game_state.sel_c {
+                                Selection::Left => {
+                                    if game_state.left_c.planks[game_state.left_c.planks.len() - 1].size > plk.size {
+                                        game_state.left_c.insert_top(plk);
+                                        None
+                                    }
+                                    else {
+                                        Some(plk)
+                                    }
+                                },
+                                Selection::Centre => {
+                                    if game_state.centre_c.planks[game_state.centre_c.planks.len() - 1].size > plk.size { 
+                                        game_state.centre_c.insert_top(plk);
+                                        None
+                                    }
+                                    else {
+                                        Some(plk)
+                                    }
+                                },
+                                Selection::Right => {
+                                    if game_state.right_c.planks[game_state.right_c.planks.len() - 1].size > plk.size {
+                                        game_state.right_c.insert_top(plk);
+                                        None
+                                    }
+                                    else {
+                                        Some(plk)
+                                    }
+                                }
+                                _ => {Some(plk)},
+                            }     
+                            
+                        },
+                        //a plank hasnt been selected
+                        None => {
+                            match game_state.sel_c {
+                                Selection::Left => {
+                                    if game_state.left_c.planks.len() > 1 {
+                                        Some(game_state.left_c.remove_top())
+                                    }
+                                    else {
+                                        None
+                                    }
+                                },
+                                Selection::Centre => {
+                                    if game_state.centre_c.planks.len() > 1 {
+                                        Some(game_state.centre_c.remove_top())
+                                    }
+                                    else {
+                                        None
+                                    }
+                                },
+                                Selection::Right => {
+                                    if game_state.right_c.planks.len() > 1 {
+                                    Some(game_state.right_c.remove_top())
+                                    }
+                                    else {
+                                        None
+                                    }
+                                },
+                                _ => None,
+                            }
+                        },
+                    };
+
+                    //println!("ter:\n\n{:?}\n\n{:?}\n\n{:?}\n\n",game_state.left_c.planks,game_state.centre_c.planks,game_state.right_c.planks);
+                    
+                },
+                _ => {},
+            }
+        }
+
         if let Some(args) = event.render_args() {
             //drawing stuff here
             gl.draw(args.viewport(), |c: Context, g: &mut GlGraphics| {
                 use graphics::clear;
-
                 clear([1.0,1.0,1.0,1.0],g);
+
+                game_state.draw(&c,g);     
+                match moving_plank.as_mut() {
+                    Some(plk) => plk.draw(&c, g),
+                    None => (), 
+                }
             });
         }
     }

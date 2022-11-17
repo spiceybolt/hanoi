@@ -41,18 +41,16 @@ fn main() {
                     
                         game_state.sel_c = Selection::Left;
                     
-                    match moving_plank.as_mut() {
-                        Some(plk) => plk.rect[0] = pos[0] +  (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0,
-                        None => (),
+                    if let Some(plk) = moving_plank.as_mut() {
+                        plk.rect[0] = pos[0] +  (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0;
                     }
                 },
                 Key::S => {
                     
                     game_state.sel_c = Selection::Centre;
                     
-                    match moving_plank.as_mut() {
-                        Some(plk) => plk.rect[0] = pos[0] + COLUMN_LENGTH + (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0,
-                        None => (),
+                    if let Some(plk) = moving_plank.as_mut() {
+                        plk.rect[0] = pos[0] + COLUMN_LENGTH + (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0;   
                     }
                 
                 },
@@ -60,9 +58,8 @@ fn main() {
                     
                     game_state.sel_c = Selection::Right;
                     
-                    match moving_plank.as_mut() {
-                        Some(plk) => plk.rect[0] = pos[0] + 2.0*COLUMN_LENGTH + (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0,
-                        None => (),
+                    if let Some(plk) = moving_plank.as_mut() {
+                        plk.rect[0] = pos[0] + 2.0*COLUMN_LENGTH + (COLUMN_LENGTH - PLANK_LENGTH*plk.size)/2.0;
                     }
                 },
                 Key::W => {
@@ -70,32 +67,17 @@ fn main() {
                         //a plank is already up
                         Some(plk) => {
                             match game_state.sel_c {
-                                Selection::Left => {
-                                    if game_state.left_c.planks[game_state.left_c.planks.len() - 1].size > plk.size {
-                                        game_state.left_c.insert_top(plk);
-                                        None
-                                    }
-                                    else {
-                                        Some(plk)
-                                    }
+                                Selection::Left if game_state.left_c.planks[game_state.left_c.planks.len() - 1].size > plk.size => {
+                                    game_state.left_c.insert_top(plk);
+                                    None  
                                 },
-                                Selection::Centre => {
-                                    if game_state.centre_c.planks[game_state.centre_c.planks.len() - 1].size > plk.size { 
-                                        game_state.centre_c.insert_top(plk);
-                                        None
-                                    }
-                                    else {
-                                        Some(plk)
-                                    }
+                                Selection::Centre if game_state.centre_c.planks[game_state.centre_c.planks.len() - 1].size > plk.size => {
+                                    game_state.centre_c.insert_top(plk);
+                                    None
                                 },
-                                Selection::Right => {
-                                    if game_state.right_c.planks[game_state.right_c.planks.len() - 1].size > plk.size {
-                                        game_state.right_c.insert_top(plk);
-                                        None
-                                    }
-                                    else {
-                                        Some(plk)
-                                    }
+                                Selection::Right if game_state.right_c.planks[game_state.right_c.planks.len() - 1].size > plk.size => {
+                                    game_state.right_c.insert_top(plk);
+                                    None
                                 }
                                 _ => {Some(plk)},
                             }     
@@ -143,8 +125,8 @@ fn main() {
         if let Some(args) = event.render_args() {
             //drawing stuff here
             gl.draw(args.viewport(), |c: Context, g: &mut GlGraphics| {
-                use graphics::clear;
-                clear([1.0,1.0,1.0,1.0],g);
+
+                graphics::clear([1.0,1.0,1.0,1.0],g);
 
                 game_state.draw(&c,g);     
                 match moving_plank.as_mut() {

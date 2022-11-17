@@ -33,7 +33,6 @@ impl Plank {
 
 pub struct Column {
     pub planks: Vec<Plank>,
-    pub selected: bool,
     border_color: Color,
     background_color: Color,
     selected_border_color: Color,
@@ -52,14 +51,9 @@ impl Column {
                 col.push(Plank::new(i, el,[rect[0],rect[1]]));
                 i -= 1.0;
             }
-            for plank in &col{
-                println!("{:?}, pos: {:?}, col_l:{},pla_l:{},pla_w:{},pla_n:{}",plank.rect,[rect[0],rect[1]],COLUMN_LENGTH,PLANK_LENGTH,PLANK_WIDTH,PLANK_NUMBER);
-
-            }
         }
         Column {
             planks: col,
-            selected: false,
             border_color: [0.0,0.0,0.0,1.0],
             background_color: [1.0;4],
             selected_border_color: [0.4;4],
@@ -96,16 +90,17 @@ impl Column {
         let mut colors = Vec::new();
         let l = (n+1) as f32;
         for i in 1..(n+1) {
-            if i as f32 <=  l/3.0 {
-                let a = 3.0 * ((i as f32)/l);
+            let x = i as f32;
+            if x <=  l/3.0 {
+                let a = 3.0 * (x/l);
                 colors.push([0.0,1.0-a,a,1.0]);
             }
-            else if i as f32 > l/3.0 && i as f32  <= (2.0/3.0)*l {
-                let a = 3.0*(i as f32 - l/3.0)/l;
+            else if x > l/3.0 && x  <= (2.0/3.0)*l {
+                let a = 3.0*(x - l/3.0)/l;
                 colors.push([a,0.0,1.0-a,1.0]); 
             }
-            else if i as f32 > ((2.0/3.0))*l {
-                let a = 3.0*(i as f32 -2.0*l/3.0)/l;
+            else if x > ((2.0/3.0))*l {
+                let a = 3.0*(x -2.0*l/3.0)/l;
                 colors.push([1.0-a,a,0.0,1.0]);
             }
         }
